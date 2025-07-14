@@ -210,9 +210,11 @@ export const LandingPage = (): JSX.Element => {
 
                 {/* Find Route button */}
                 <div className="px-4 py-3 flex items-start relative self-stretch w-full flex-[0_0_auto]">
-                  <Button className="flex min-w-[84px] max-w-[480px] h-12 items-center justify-center px-5 py-0 relative flex-1 grow bg-[#ddbfbf] rounded-3xl text-[#161111] hover:bg-[#c9adad]">
+                  <Button 
+                    className="flex min-w-[84px] max-w-[480px] h-12 items-center justify-center px-5 py-0 relative flex-1 grow bg-[#ddbfbf] rounded-3xl text-[#161111] hover:bg-[#c9adad]"
                     onClick={handleFindRoute}
                     disabled={loading}
+                  >
                     <span className="font-['Epilogue',Helvetica] font-bold text-base">
                       {loading ? "Finding Route..." : "Find Route"}
                     </span>
