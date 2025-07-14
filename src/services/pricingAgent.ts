@@ -96,27 +96,44 @@ export class SmartPricingAgent {
       const recommendedSACCO = this.getBestSACCO(saccos, primaryRoute);
       const saccoMultiplier = recommendedSACCO?.priceMultiplier || 1.0;
 
+      // Apply maximum cap for time and traffic adjustments (50 KES max)
+      const MAX_TIME_TRAFFIC_ADJUSTMENT = 50;
+      
+      // Calculate raw time and traffic adjustments
+      const rawTimeAdjustment = baseFare * (timeMultiplier - 1);
+      const rawTrafficAdjustment = baseFare * timeMultiplier * (trafficMultiplier - 1);
+      const totalRawAdjustment = rawTimeAdjustment + rawTrafficAdjustment;
+      
+      // Cap the combined time and traffic adjustment
+      const cappedAdjustment = Math.min(totalRawAdjustment, MAX_TIME_TRAFFIC_ADJUSTMENT);
+      const adjustmentRatio = totalRawAdjustment > 0 ? cappedAdjustment / totalRawAdjustment : 1;
+      
+      // Apply the ratio to individual adjustments
+      const cappedTimeMultiplier = totalRawAdjustment > 0 ? 
+        1 + ((timeMultiplier - 1) * adjustmentRatio) : timeMultiplier;
+      const cappedTrafficMultiplier = totalRawAdjustment > 0 ? 
+        1 + ((trafficMultiplier - 1) * adjustmentRatio) : trafficMultiplier;
       // Calculate final fare
       const factors: PricingFactors = {
         baseFare,
-        timeMultiplier,
+        timeMultiplier: cappedTimeMultiplier,
         weatherMultiplier,
-        trafficMultiplier,
+        trafficMultiplier: cappedTrafficMultiplier,
         demandMultiplier,
         saccoMultiplier
       };
 
-      const estimatedFare = baseFare * timeMultiplier * weatherMultiplier * 
-                           trafficMultiplier * demandMultiplier * saccoMultiplier;
+      const estimatedFare = baseFare * cappedTimeMultiplier * weatherMultiplier * 
+                           cappedTrafficMultiplier * demandMultiplier * saccoMultiplier;
 
       // Create breakdown for transparency
       const breakdown = {
         base: baseFare,
-        timeAdjustment: baseFare * (timeMultiplier - 1),
-        weatherAdjustment: baseFare * timeMultiplier * (weatherMultiplier - 1),
-        trafficAdjustment: baseFare * timeMultiplier * weatherMultiplier * (trafficMultiplier - 1),
-        demandAdjustment: baseFare * timeMultiplier * weatherMultiplier * trafficMultiplier * (demandMultiplier - 1),
-        saccoAdjustment: baseFare * timeMultiplier * weatherMultiplier * trafficMultiplier * demandMultiplier * (saccoMultiplier - 1)
+        timeAdjustment: baseFare * (cappedTimeMultiplier - 1),
+        weatherAdjustment: baseFare * cappedTimeMultiplier * (weatherMultiplier - 1),
+        trafficAdjustment: baseFare * cappedTimeMultiplier * weatherMultiplier * (cappedTrafficMultiplier - 1),
+        demandAdjustment: baseFare * cappedTimeMultiplier * weatherMultiplier * cappedTrafficMultiplier * (demandMultiplier - 1),
+        saccoAdjustment: baseFare * cappedTimeMultiplier * weatherMultiplier * cappedTrafficMultiplier * demandMultiplier * (saccoMultiplier - 1)
       };
 
       return {

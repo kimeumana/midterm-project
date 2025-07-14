@@ -69,6 +69,11 @@ export const FareEstimate: React.FC<FareEstimateProps> = ({ fareEstimate, insigh
                 <span>{insight}</span>
               </div>
             ))}
+            {(fareEstimate.breakdown.timeAdjustment + fareEstimate.breakdown.trafficAdjustment) >= 50 && (
+              <div className="flex items-center gap-2 text-sm text-yellow-400">
+                <span>⚠️ Maximum time & traffic adjustment (KES 50) applied</span>
+              </div>
+            )}
           </div>
         </Card>
       )}
