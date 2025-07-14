@@ -15,9 +15,9 @@ export const Header: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-[#ddbfbf] rounded-lg flex items-center justify-center">
-              <span className="text-[#161111] font-bold text-lg">M</span>
+              <span className="text-[#161111] font-bold text-lg">3</span>
             </div>
-            <span className="text-white font-bold text-xl">MatFare</span>
+            <span className="text-white font-bold text-xl">MA3</span>
           </Link>
 
           {/* Navigation */}
