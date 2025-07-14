@@ -21,7 +21,7 @@ export interface SACCO {
 
 export class MapsService {
   private static instance: MapsService;
-  private apiKey = 'maps:api';
+  private apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'maps:api';
 
   static getInstance(): MapsService {
     if (!MapsService.instance) {
@@ -35,28 +35,39 @@ export class MapsService {
     destination: { lat: number; lng: number }
   ): Promise<Route[]> {
     try {
-      // Replace with actual maps API call
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}&alternatives=true&key=${this.apiKey}`
-      );
-
-      if (!response.ok) {
-        throw new Error('Routes data unavailable');
+      // Check if we have a valid API key
+      if (this.apiKey === 'maps:api' || !this.apiKey) {
+        console.warn('Using mock routes data - no valid Maps API key provided');
+        return this.getMockRoutes();
       }
 
-      const data = await response.json();
-      
-      return data.routes.map((route: any, index: number) => ({
-        id: `route_${index}`,
-        name: route.summary || `Route ${index + 1}`,
-        distance: route.legs[0].distance.value / 1000, // Convert to km
-        duration: route.legs[0].duration.value / 60, // Convert to minutes
-        traffic: this.determineTrafficLevel(route.legs[0].duration_in_traffic?.value || route.legs[0].duration.value),
-        safetyScore: this.calculateSafetyScore(route),
-        coordinates: this.decodePolyline(route.overview_polyline.points)
-      }));
+      try {
+        // Replace with actual maps API call
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}&alternatives=true&key=${this.apiKey}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Routes data unavailable');
+        }
+
+        const data = await response.json();
+        
+        return data.routes.map((route: any, index: number) => ({
+          id: `route_${index}`,
+          name: route.summary || `Route ${index + 1}`,
+          distance: route.legs[0].distance.value / 1000, // Convert to km
+          duration: route.legs[0].duration.value / 60, // Convert to minutes
+          traffic: this.determineTrafficLevel(route.legs[0].duration_in_traffic?.value || route.legs[0].duration.value),
+          safetyScore: this.calculateSafetyScore(route),
+          coordinates: this.decodePolyline(route.overview_polyline.points)
+        }));
+      } catch (apiError) {
+        console.warn('Maps API call failed, using mock data:', apiError);
+        return this.getMockRoutes();
+      }
     } catch (error) {
-      console.error('Error fetching routes:', error);
+      console.warn('Error in getRoutes, using mock data:', error);
       // Return mock routes if API fails
       return this.getMockRoutes();
     }
